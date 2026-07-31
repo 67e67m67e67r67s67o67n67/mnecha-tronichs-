@@ -14,4 +14,4 @@
 + Detection of people nearby
 +Have an ultrasonic detector with a laser next to it so people can see where it points
 
-![flowchart](marke%20ndown.md\Documents\GitHub\mnecha-tronichs-\images\flowchartimage.png)
+![flowchart](/images/flowChart.png)
