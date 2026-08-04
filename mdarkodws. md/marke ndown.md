@@ -14,4 +14,11 @@
 + Detection of people nearby
 +Have an ultrasonic detector with a laser next to it so people can see where it points
 
+
+## Planning
+
+### Flowchart
+
 ![flowchart](/images/flowChart.png)
+
+### Pseudocode
