@@ -22,3 +22,44 @@
 ![flowchart](/images/flowChart.png)
 
 ### Pseudocode
+
+#### Functions for different noise levels
+
+- BEGIN baby()
+    - WHILE true
+        - READ volume
+        - IF volume > 60 THEN
+            - OUTPUT buzzer.on() 
+        - ENDIF
+- END baby()
+        
+- BEGIN parents()
+    - WHILE true
+        - READ volume
+        - IF volume > 70 THEN
+            - OUTPUT buzzer.on() 
+        - ENDIF
+- END parents()
+
+- BEGIN casual()
+    - WHILE true
+        - READ volume
+        - IF volume > 80 THEN
+            - OUTPUT buzzer.on() 
+        - ENDIF
+- END casual()
+
+#### Main Program
+
+- BEGIN
+    - WHILE true
+        - READ potentiometer
+        - IF potentiometer < 21845 THEN
+            - baby()
+        - ELIF potentiometer > 21845 AND < 43690  THEN
+            - parents()
+        - ELIF potentiometer > 43690 THEN
+            - casual()
+        - ENDIF
+    ENDWHILE
+END
