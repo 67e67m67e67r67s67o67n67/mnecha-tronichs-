@@ -19,3 +19,77 @@ while True:
        led2.value(0)
        led3.value(0)
 
+from machine import Pin
+import machine
+import time
+import math
+
+# Initialize ADC on GP26 (ADC 0)
+adc = machine.ADC(26)
+LED = Pin (18, Pin.OUT)
+LED2 = Pin (19, Pin.OUT)
+LED3 = Pin (20, Pin.OUT)
+# Calibration values (Adjust these based on your room noise)
+# Cheap microphone modules lack factory calibration, so we establish a baseline.
+DB_BASELINE = 40.0   # Decibel estimation for a dead-silent room
+ADC_BASELINE = 10.0  # Minimum raw amplitude variation in a dead-silent room
+
+def sample_peak_to_peak(duration_ms=50):
+    """
+    Samples the microphone rapidly for a fixed window to find the max wave amplitude.
+    """
+    max_val = 0
+    min_val = 65535
+    
+    start_time = time.ticks_ms()
+    
+    # Read as fast as possible for the duration window (default 50ms)
+    while time.ticks_diff(time.ticks_ms(), start_time) < duration_ms:
+        sample = adc.read_u16()
+        if sample > max_val:
+            max_val = sample
+        if sample < min_val:
+            min_val = sample
+            
+    # Calculate peak-to-peak amplitude difference
+    peak_to_peak = max_val - min_val
+    return peak_to_peak
+
+print("Calibrating/Starting Decibel Meter...")
+time.sleep(1)
+
+while True:
+    # 1. Capture the amplitude of the audio wave
+    amplitude = sample_peak_to_peak(50)
+    
+    # 2. Prevent mathematical domain errors if amplitude is zero or below baseline
+    if amplitude < ADC_BASELINE:
+        amplitude = ADC_BASELINE
+        
+    # 3. Logarithmic formula: dB = Baseline_dB + 20 * log10(Current_Amplitude / Baseline_Amplitude)
+    # Sound pressure scales logarithmically relative to your reference point.
+    decibels = DB_BASELINE + (20 * math.log10(amplitude / ADC_BASELINE))
+    if decibels >= 75 and decibels <= 80:
+        LED.value(1)
+        LED2.value(0)
+        LED3.value(0)
+        
+    elif decibels >= 80 and decibels <= 85:
+        LED.value(0)
+        LED2.value(1)
+        LED3.value(0)
+        
+    elif decibels >= 85:
+        LED.value(0)
+        LED2.value(0)
+        LED3.value(1)
+
+        
+    else:
+        LED.value(0)
+        LED2.value(0)
+        LED3.value(0)
+    # Print the values to the Thonny Shell / Plotter
+    print(f"Raw Amplitude: {amplitude} | Estimated dB: {decibels:.1f}")
+
+
