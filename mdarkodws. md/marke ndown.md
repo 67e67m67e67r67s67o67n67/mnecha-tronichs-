@@ -12,7 +12,7 @@
 
 ### Non-Functional Requirements
 + Detection of people nearby
-+Have an ultrasonic detector with a laser next to it so people can see where it points
++ Have an ultrasonic detector with a laser next to it so people can see where it points
 
 
 ## Planning
@@ -63,3 +63,13 @@
         - ENDIF
     ENDWHILE
 END
+
+
+## Evaluation
+
+### My Evaluation
+
+My project effectively meets the functional and non functional requirements, it has three different modes each with different levels of how loud before it goes off. If you are too loud the lights change colour and the buzzer starts buzzing. I did not complete the nearby people detection as I was more focused on getting the sound detection working and making the wiring efficent.
+
+### Peer Evaluation
+
