@@ -73,3 +73,22 @@ My project effectively meets the functional and non functional requirements, it 
 
 ### Peer Evaluation
 
+#### PMI 1
+
+Positive: I like how the modes in the code are lined up to represent different volume sensing rates.
+The mode selection system is well made, with a logical method for selections.
+
+Negative: Modes are not explained well enough, Buzzer can of obviously trigger the original microphone detector over and over again.
+
+Implication: The unique modes, and intuitive mode selection on this system, makes it have a wide use case in detecting noise at different volumes.
+The modes could be explained a little better, and the buzzer and microphone loop could cause issues.
+
+
+#### PMI 2
+
+Positive: The device completesthe required task, and effectively alerts the usere
+
+Negative: Selecting the mode is extremely bothersome and could be improved
+
+Implication: The project fulfills its purposebut cou;d ave beem designed to be more user friendly
+
