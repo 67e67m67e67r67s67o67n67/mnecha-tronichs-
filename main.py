@@ -6,131 +6,217 @@ import neopixel
 
 
 num_LEDs = 5
-Pin = macnum_LEDs = 5
+# Number of LEDs on the strip
 pin_neopixel = machine.Pin(22, machine.Pin.OUT)
 strip = neopixel.NeoPixel(pin_neopixel, num_LEDs)
+# Makes strip the function where we put the RGB colours
+
 button1 = Pin(14, Pin.IN, Pin.PULL_DOWN)
-button_counter = 0
+button2 = Pin(15, Pin.IN, Pin.PULL_DOWN)
+# Le buttons
+
 buzzer = machine.Pin(18, machine.Pin.OUT)
 buzza = PWM(buzzer)
 buzza.duty_u16(0)
+# Since our buzzer is passive (frequenct and pitch can be changed), it requires a different 'turn on'
+# And uses a Pulse Width Modulator
+
 current_time = time.ticks_ms()
-selectMode = 0
+selectMode = 1
 confirmMode = 0
 
+decibels = 0.0
+button_counter = 0
+'''
+This section above sets all necessary variables to 0 (or 1 in the case of selectMode)
+This creates the variables, makes them global and assigns them a value to be changed
+'''
 
+# Sets up the 3 different modes
 def modeOne():
- while True:
-         sound_detector()
-         if decibels >= 75:
-            strip[0] = (255, 0, 0)
-            strip[1] = (0, 0, 0)
-            strip[2] = (0, 0, 0)
-            strip.write()
+    strip[0] = (255, 0, 0)
+    strip[1] = (0, 0, 0)
+    strip[2] = (0, 0, 0)
+    strip.write()
+    # Red LED
 
-def modeTwo():
- while True:
+    while True:
         sound_detector()
-        if decibels >= 80:
-            strip[0] = (0, 0, 0)
-            strip[1] = (0, 255, 0)
-            strip[2] = (0, 0, 0)
-            strip.write()
-def modeThree():
- while True:
-        sound_detector()
-        if decibels >= 85:
-            strip[0] = (0, 0, 0)
-            strip[1] = (0, 0, 0)
-            strip[2] = (0, 0, 255)
-            strip.write()
+        print(decibels)
 
-def buzza_process():
-            buzza.freq(1000)
-            buzza.duty_u16(32000)
-            buzzer_end_time = time.ticks_add(current_time, 2000)
+        if decibels >= 75:
+            buzza_process()
+        else:
             buzza.duty_u16(0)
 
+
+def modeTwo():
+    strip[0] = (0, 0, 0)
+    strip[1] = (0, 255, 0)
+    strip[2] = (0, 0, 0)
+    strip.write()
+    # Green LED
+
+    while True:
+        sound_detector()
+        print(decibels)
+        # Prints decibels for testing
+
+        if decibels >= 80:
+            buzza_process()
+        else:
+            buzza.duty_u16(0)
+
+
+def modeThree():
+    strip[0] = (0, 0, 0)
+    strip[1] = (0, 0, 0)
+    strip[2] = (0, 0, 255)
+    strip.write()
+    # Blue LED
+
+    while True:
+        sound_detector()
+        print(decibels)
+
+        if decibels >= 85:
+            buzza_process()
+        else:
+            buzza.duty_u16(0)
+
+
+def buzza_process():
+    buzza.freq(1000)
+    buzza.duty_u16(32000)
+    # Turns the buzzer action into a process so that it's easier
+
+
 def sound_detector():
-        # If the button is NOT pressed, run the microphone logic
-        # 1. Capture the amplitude of the audio wave
-        amplitude = sample_peak_to_peak(50)
+    global decibels, button_counter
+    # Makes decibels global so it can be changed outside of the function
 
-        # 2. Prevent mathematical domain errors if amplitude is zero or below baseline
-        if amplitude < ADC_BASELINE:
-            amplitude = ADC_BASELINE
+    amplitude = sample_peak_to_peak(50)
+    # Finds the wavelength
 
-        # 3. Logarithmic formula: dB = Baseline_dB + 20 * log10(Current_Amplitude / Baseline_Amplitude)
-        decibels = DB_BASELINE + (20 * math.log10(amplitude / ADC_BASELINE))
+    if amplitude < ADC_BASELINE:
+        amplitude = ADC_BASELINE
+        # Ensures a value is shown
+
+    decibels = DB_BASELINE + (20 * math.log10(amplitude / ADC_BASELINE))
+    # The math behind the rough conversion between amplitude, the baseline and decibels
 
 
-if button1.value(1):
-    button_counter = button_counter + 1
-
-# Initialize ADC on GP26 (ADC 0)
 adc = machine.ADC(26)
 
-# Calibration values (Adjust these based on your room noise)
-# Cheap microphone modules lack factory calibration, so we establish a baseline.
-DB_BASELINE = 40.0   # Decibel estimation for a dead-silent room
-ADC_BASELINE = 10.0  # Minimum raw amplitude variation in a dead-silent room
+# Rough decibel baseline for silence
+DB_BASELINE = 40.0
+
+# Calibrated depending on room
+ADC_BASELINE = 90.0
 
 
 def sample_peak_to_peak(duration_ms=50):
-    """
-    Samples the microphone rapidly for a fixed window to find the max wave amplitude.
-    """
+
     max_val = 0
     min_val = 65535
 
     start_time = time.ticks_ms()
-    # Read as fast as possible for the duration window (default 50ms)
+
     while time.ticks_diff(time.ticks_ms(), start_time) < duration_ms:
+        # While the process is going (duration is not fulfilled), do this:
+
         sample = adc.read_u16()
+
         if sample > max_val:
             max_val = sample
+            # Sample WILL be more than max val
+
         if sample < min_val:
             min_val = sample
+            # WILL be less than min val
 
-    # Calculate peak-to-peak amplitude difference
     peak_to_peak = max_val - min_val
+
     return peak_to_peak
 
 
 print("Calibrating/Starting Decibel Meter...")
 time.sleep(1)
 
-# SINGLE MAIN LOOP FOR BOTH FEATURES
-while True:
-    if button1.value(1):
-       selectMode = selectMode + 1
-    if selectMode > 3:
-           selectMode = 1
-    if button2.value(1):
-       confirmMode = selectMode
-       
-    if selectMode == 1:
-      strip[0] = (255, 0, 0)
-      strip[1] = (0, 0, 0)
-      strip[2] = (0, 0, 0)
-      strip.write()
-    elif selectMode == 2:
-      strip[0] = (0, 0, 0)
-      strip[1] = (0, 255, 0)
-      strip[2] = (0, 0, 0)
-      strip.write()    
-    elif selectMode == 3:
-      strip[0] = (0, 0, 0)
-      strip[1] = (0, 0, 0)
-      strip[2] = (0, 0, 255)
-      strip.write()    
-    elif confirmMode == 1:
-      modeOne()
-    elif confirmMode ==2:
-      modeTwo()
-    elif confirmMode == 3:
-      modeThree()
-    else:
 
-        # Print the values so Thonny's Plotter can see them
-    print(f"Raw Amplitude: {amplitude} | Estimated dB: {decibels:.1f}")
+# ==========================================================
+# MODE SELECTION
+# ==========================================================
+
+# Turn all LEDs off before starting
+strip[0] = (0, 0, 0)
+strip[1] = (0, 0, 0)
+strip[2] = (0, 0, 0)
+strip[3] = (0, 0, 0)
+strip[4] = (0, 0, 0)
+strip.write()
+
+
+# Wait for both buttons to be released
+while button1.value() == 1 or button2.value() == 1:
+    time.sleep(0.01)
+
+
+while True:
+    # Mode selection
+    if button1.value() == 1:
+
+        selectMode = selectMode + 1
+
+        if selectMode > 3:
+            selectMode = 1
+
+        # Wait for button release
+        while button1.value() == 1:
+            time.sleep(0.01)
+            # Ensures one click isn't read as many in a short time
+           
+    # Turn corresponding LED on
+    if selectMode == 1:
+
+        strip[0] = (255, 0, 0)
+        strip[1] = (0, 0, 0)
+        strip[2] = (0, 0, 0)
+
+    elif selectMode == 2:
+
+        strip[0] = (0, 0, 0)
+        strip[1] = (0, 255, 0)
+        strip[2] = (0, 0, 0)
+
+    elif selectMode == 3:
+
+        strip[0] = (0, 0, 0)
+        strip[1] = (0, 0, 0)
+        strip[2] = (0, 0, 255)
+
+    strip.write()
+
+    # Confirm the selection
+    if button2.value() == 1:
+
+        confirmMode = selectMode
+
+        # Wait for button release
+        while button2.value() == 1:
+            time.sleep(0.01)
+
+        break
+
+
+    time.sleep(0.05)
+
+# Activate the mode forever
+if confirmMode == 1:
+    modeOne()
+
+elif confirmMode == 2:
+    modeTwo()
+
+elif confirmMode == 3:
+    modeThree()
